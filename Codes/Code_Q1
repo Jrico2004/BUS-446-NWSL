@@ -1,0 +1,78 @@
+# install.packages("devtools")
+install.packages("devtools")
+
+devtools::install_github("nwslR/nwslR", 
+                         ref = "v0.0.0.9002")
+#Knit your data
+knitr::opts_chunk$set(
+  fig.path = "man/figures/README-"
+)
+#Export it and run load_teams
+#' @export
+load_teams <- function() {
+  t <- readr::read_csv("https://github.com/nwslR/nwsldata/releases/download/key_tables/teams.csv",
+                       show_col_types = FALSE)
+  
+  return(t)}
+
+#Run the code and make sure it is working 
+load_teams
+
+#Install tidyverse
+install.packages("tidyverse")
+
+#Run all libraries
+library(nwslR)
+library(dplyr)
+library(tidyverse)
+
+#Load Data ID's
+
+matches = load_matches()
+players = load_players()
+teams = load_teams()
+metrics = load_metrics()
+match_stats = load_player_match_stats()
+
+
+#________________________________________________________________________________________
+# 1. Find the players with the highest percentage of shots conceded in the box during the 2022 season.
+
+#Load your match data for 2022 season
+matches_2022 <- load_matches() %>%
+  dplyr::filter(season == 2022)
+
+#Load all players
+players <- load_players()
+
+# * A small number of matches do not have data, so we wrap this in a safe call to ensure this runs without error 
+safe_load_pms <- purrr::possibly(load_player_match_stats, otherwise = data.frame())
+
+#Find all information for player stats based on shots conceded in the box
+player_stats <- purrr::map_df(matches_2022$match_id, safe_load_pms, .progress = TRUE)
+
+player_shots <- player_stats %>%
+  dplyr::select(player_id, team_id, shots_total, shots_conceded_in_box) %>%
+  dplyr::group_by(player_id) %>%
+  dplyr::summarise(shots_total = sum(shots_total), 
+                   shots_conceded_in_box = sum(shots_conceded_in_box), 
+                   percent_conceded_in_box = shots_conceded_in_box/shots_total) %>%
+  dplyr::filter(shots_total >= 15) %>%
+  dplyr::left_join(players, by = "player_id") %>%
+  dplyr::mutate(name_label = dplyr::coalesce(player_known_name, paste(player_short_first_name, player_short_last_name, sep = " "))) %>%
+  dplyr::arrange(percent_conceded_in_box) %>%
+  dplyr::slice_max(percent_conceded_in_box, n = 10)
+
+# Create the plot
+ggplot(player_shots) + 
+  geom_bar(aes(x = reorder(name_label, percent_conceded_in_box), y = percent_conceded_in_box), 
+           stat = "identity", 
+           fill = "#384335b0") +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) +  # Adjust the width as needed
+  labs(x = "", 
+       y = "% of Shots Conceded in Box", 
+       title = "NWSL 2022 Regular Seasons: Players with Highest % of\nShots Conceded in Box", 
+       subtitle = "Minimum 15 Shots", 
+       caption = "Source: nwslR") + 
+  coord_flip() + 
+  theme_minimal()
