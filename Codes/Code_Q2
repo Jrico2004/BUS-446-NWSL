@@ -1,0 +1,32 @@
+# 2. Create a box plot demonstrating the points missed and earned by all teams in the 2021 season.
+
+#List and find teams during teh 2021 season
+teams_2021 <- c("CHI", "HOU", "NJY", "RGN", "ORL", "POR", "WAS", "NC")
+
+teams <- load_teams()
+
+# Load teams stats during the season and all the points earned and missed.
+team_stats <- purrr::map_df(teams_2021, ~load_team_season_stats(team_id = .x, season = "2021"), .progress = TRUE)
+wrangle_team_pts <- team_stats %>%
+  dplyr::select(team_id, pts_gained_from_losing_positions, pts_dropped_from_win_position) %>%
+  dplyr::mutate(pts_dropped_from_win_position = 0 - pts_dropped_from_win_position) %>%
+  tidyr::pivot_longer(!team_id, names_to = "pts_type", values_to = "points") %>%
+  dplyr::left_join(teams, by = "team_id")
+
+
+#Create your plot
+ggplot(wrangle_team_pts) + 
+geom_boxplot(aes(x = pts_type, y = points, fill = pts_type)) +
+scale_y_continuous(limits = c(-16, 16), 
+                   breaks = seq(-16, 16, 4), 
+                   labels = c(16, 12, 8, 4, 0, 4, 8, 12, 16)) +
+scale_fill_manual(labels = c('Points Lost by Conceding After Leading', 'Points Earned by Winning from Behind'), 
+                  values = c("#008080", "#50C878")) +
+labs(x = "Type of Points", 
+     y = "Points", 
+     fill = "Type of Points", 
+     title = "How Did Teams Deal with In-Game Difficulty?",
+     subtitle = "Points Earned/Lost by Teams in the 2021 NWSL Regular Season",
+     caption = "Source: nwslR") +
+theme_minimal() +
+theme(legend.position = "bottom")
