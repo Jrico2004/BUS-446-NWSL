@@ -14,10 +14,12 @@ wrangle_team_pts <- team_stats %>%
   tidyr::pivot_longer(!team_id, names_to = "goals", values_to = "shots") %>%
   dplyr::left_join(teams, by = "team_id")
 
+#These lines calculate the shot success rate (ssr) for each team by dividing goals by shots_total. It also assigns the teams_2022 vector to a new column teams in the team_stats data frame.
 team_stats$ssr = team_stats$goals/team_stats$shots_total
 team_stats$teams = teams_2022
 
 #Run your plot
+#Sets aesthetics (aes) for the plot with ssr on the x-axis and teams on the y-axis, filled by ssr.
 library(ggplot2)
 
 ggplot(team_stats) +  
