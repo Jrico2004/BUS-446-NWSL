@@ -1,12 +1,14 @@
 # 2. Create a box plot demonstrating the points missed and earned by all teams in the 2021 season.
 
-#List and find teams during teh 2021 season
+#List and find teams during teh 2021 season; creates vector with team abbreviations 
 teams_2021 <- c("CHI", "HOU", "NJY", "RGN", "ORL", "POR", "WAS", "NC")
 
 teams <- load_teams()
 
-# Load teams stats during the season and all the points earned and missed.
+# Load teams stats during the season and all the points earned and missed; iterate over each team ID and featch team season stats
 team_stats <- purrr::map_df(teams_2021, ~load_team_season_stats(team_id = .x, season = "2021"), .progress = TRUE)
+#Select specfic columns from team stats 
+#Reshapes the data from wide to long format using tidyr::pivot_longer(), with pts_type as the new column for different point types and points as the corresponding values.
 wrangle_team_pts <- team_stats %>%
   dplyr::select(team_id, pts_gained_from_losing_positions, pts_dropped_from_win_position) %>%
   dplyr::mutate(pts_dropped_from_win_position = 0 - pts_dropped_from_win_position) %>%
@@ -14,7 +16,9 @@ wrangle_team_pts <- team_stats %>%
   dplyr::left_join(teams, by = "team_id")
 
 
-#Create your plot
+#Create your plot; Sets aesthetics (aes) for the plot with pts_type on the x-axis and points on the y-axis, filled by pts_type.
+#Adjusts the y-axis limits, breaks, and labels using scale_y_continuous().
+
 ggplot(wrangle_team_pts) + 
 geom_boxplot(aes(x = pts_type, y = points, fill = pts_type)) +
 scale_y_continuous(limits = c(-16, 16), 
