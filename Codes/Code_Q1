@@ -45,12 +45,15 @@ matches_2022 <- load_matches() %>%
 #Load all players
 players <- load_players()
 
-# * A small number of matches do not have data, so we wrap this in a safe call to ensure this runs without error 
+# * A small number of matches do not have data, so we wrap this in a safe call to ensure this runs without error and will return in an empty data frame 
 safe_load_pms <- purrr::possibly(load_player_match_stats, otherwise = data.frame())
 
-#Find all information for player stats based on shots conceded in the box
+#Find all information for player stats based on shots conceded in the box; use safe load function to fectch player match stats
+#Use filter function to filter out players with fewer then 15 shots total
+#Selects top 10 players
 player_stats <- purrr::map_df(matches_2022$match_id, safe_load_pms, .progress = TRUE)
 
+#Select specfic columns from player stats and group data by player ID
 player_shots <- player_stats %>%
   dplyr::select(player_id, team_id, shots_total, shots_conceded_in_box) %>%
   dplyr::group_by(player_id) %>%
