@@ -20,17 +20,19 @@ wrangle_team_pts <- team_stats %>%
 #Adjusts the y-axis limits, breaks, and labels using scale_y_continuous().
 
 ggplot(wrangle_team_pts) + 
-geom_boxplot(aes(x = pts_type, y = points, fill = pts_type)) +
-scale_y_continuous(limits = c(-16, 16), 
-                   breaks = seq(-16, 16, 4), 
-                   labels = c(16, 12, 8, 4, 0, 4, 8, 12, 16)) +
-scale_fill_manual(labels = c('Points Lost by Conceding After Leading', 'Points Earned by Winning from Behind'), 
-                  values = c("#008080", "#50C878")) +
-labs(x = "Type of Points", 
-     y = "Points", 
-     fill = "Type of Points", 
-     title = "How Did Teams Deal with In-Game Difficulty?",
-     subtitle = "Points Earned/Lost by Teams in the 2021 NWSL Regular Season",
-     caption = "Source: nwslR") +
-theme_minimal() +
-theme(legend.position = "bottom")
+  geom_bar(aes(x = points, y = team_abbreviation, group = pts_type, fill = pts_type), 
+           stat = "identity") + 
+  scale_y_discrete(limits = rev) + 
+  scale_x_continuous(limits = c(-16, 16), 
+                     breaks = seq(-16, 16, 4), 
+                     labels = c(16, 12, 8, 4, 0, 4, 8, 12, 16)) +
+  scale_fill_manual(labels=c('Points Lost by Conceding After Leading', 'Points Earned by Winning from Behind'), 
+                    values = c("#008080", "#50C878")) +
+  labs(x = "Points", 
+       y = "Teams", 
+       fill = "", 
+       title = "How Did Teams Deal with In-Game Difficulty? ", 
+       subtitle = "2021 NWSL Regular Season", 
+       caption = "Source: nwslR") +
+  theme_minimal() +
+  theme(legend.position = "bottom")
