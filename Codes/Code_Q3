@@ -27,7 +27,7 @@ ggplot(team_stats) +
                      breaks = seq(0, 0.4, 0.1), 
                      labels = scales::percent_format()) +
   labs(x = "Points", 
-       y = "Teams State", 
+       y = "Team States", 
        fill = "Type of Points", 
        title = "Number of Successful Attempted Shots",
        subtitle = "Goal/Shots Total",
