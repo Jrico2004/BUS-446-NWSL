@@ -1,0 +1,37 @@
+# Quiz Question
+# Create a barplot demonstrating the total number of succesful attempted shots for all teams for the 2021 season.
+
+#Find your teams during the 2022 season
+teams_2021 <- c("CHI", "HOU", "NJY", "RGN", "ORL", "POR", "WAS", "NC")
+
+#Run teams
+teams <- load_teams()
+
+#Find your data
+team_stats <- purrr::map_df(teams_2021, ~load_team_season_stats(team_id = .x, season = "2021"), .progress = TRUE)
+wrangle_team_pts <- team_stats %>%
+  dplyr::select(team_id, teams, goals, shots_total) %>%
+  dplyr::mutate(shots = 0 - goals) %>%
+  tidyr::pivot_longer(!team_id, names_to = "goals", values_to = "shots") %>%
+  dplyr::left_join(teams, by = "team_id")
+
+team_stats$ssr = team_stats$goals/team_stats$shots_total
+team_stats$teams = teams_2021
+
+#Run your plot
+library(ggplot2)
+
+ggplot(team_stats) +  
+  geom_col(aes(x = ssr, y = teams), 
+           fill = "#52303B") +  # Change the color here
+  scale_x_continuous(limits = c(0, 0.4), 
+                     breaks = seq(0, 0.4, 0.1), 
+                     labels = scales::percent_format()) +
+  labs(x = "Points", 
+       y = "Team States", 
+       fill = "Type of Points", 
+       title = "Number of Successful Attempted Shots",
+       subtitle = "Goal/Shots Total",
+       caption = "Source: nwslR") +
+  theme_minimal() +
+  theme(legend.position = "bottom")
